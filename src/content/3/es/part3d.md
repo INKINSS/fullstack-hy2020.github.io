@@ -230,35 +230,28 @@ Responderemos todas las preguntas:
 
 ![salida del terminal de ESlint init](../../images/3/52new.png)
 
-La configuración se guardará en el archivo _.eslintrc.js_. Cambiaremos _browser_ a _node_ en la configuración de _env_:
+La configuración se guardará en el archivo _eslint.config.js_. anteriormente al correr el comando se creaba un archivo _.eslintrc_ , pero con las nuevas actualizaciones eso ha cambiado, lo ideal es poder saber configurar el archivo creado para poder corregir errores de una manera eficaz y al mismo tiempo tener un código limpio.
 
 ```js
-module.exports = {
-    "env": {
-        "commonjs": true,
-        "es2021": true,
-        "node": true // highlight-line
-    },
-    "overrides": [
-        {
-            "env": {
-                "node": true
-            },
-            "files": [
-                ".eslintrc.{js,cjs}"
-            ],
-            "parserOptions": {
-                "sourceType": "script"
-            }
-        }
-    ],
-    "parserOptions": {
-        "ecmaVersion": "latest"
-    },
-    "rules": {
-    }
-}
+import js from "@eslint/js";
+import globals from "globals";
+import { defineConfig } from "eslint/config";
+
+
+export default defineConfig([
+  { files: ["**/*.{js,mjs,cjs}"], plugins: { js }, extends: ["js/recommended"], rules: {
+    "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+  }, languageOptions: { globals: { ...globals.node, ...globals.browser } } },
+  { files: ["**/*.{js,mjs,cjs}"], languageOptions: { globals: globals.browser } },
+]);
+
 ```
+la configuración hecha corrige 2 problemas que tenemos en el backend
+1. en nuestro archivo de configuracion donde hacemos la conexión a la base de datos no nos está reconociendo la palabra reservada 'process' , nuestro linter de código se queja y es solucionado en el apartado de 'languageOptions' diciendo que las variables globales son de node y tambien del navegador,
+2. el segundo error es que hay variables que estan definidas pero que no se utilizan, esto es más común de lo que parece, ya que hay controladores que necesitan de los 3 parámetros que hemos aprendido (req, res, next) pero aveces solo se utilizan 2, entonces ¿qué se hace en estos casos?
+
+## convención de variables no utilizadas
+una buena idea para definir variables que no serán utilizadas es aveces simplemente eliminarlas, en la gran mayoría de casos eso no sería un problema grave, hay otra manera que es simplemente colocar un comentario encima de la línea donde salta el error para deshabilitar ese error en específico, pero esto llevaría a tener un código lleno de comentarios, por eso la manera recomendada es usar una 'convención de variables no utilizadas' es simplemente que las variables que no se utilicen lleven un formato para especificar que no será utilizada y queremos que se mantenga por pura lectura de codigo, esto ayuda a que sea más legible en muchos casos, eso se ve en la línea 7 y 8 de nuestro archivo de configuracón, al decir que añadiremos reglas 'rules' estamos diciendo que las variables que no son utilizadas llevarán un guión bajo como prefijo a la variable, esto hará que el código se mantenga limpio sin comentarios innecesarios y que puedas trabajar de manera limpia y ordenada tu código, así la próxima vez que definas una función o variables que no utilizarás pero las quieres tener por pura comprensión de código, solamente colocas un guión bajo como prefijo y listo. 
 
 Cambiemos un poco la configuración. Instala un [plugin](https://eslint.style/packages/js) que define un conjunto de reglas relacionadas al estilo:
 
